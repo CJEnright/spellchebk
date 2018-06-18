@@ -3,7 +3,11 @@ package bkspellcheck
 type BKTree struct {
 	Word string
 	Children []BKTree
-	// Distance from parent
+	Distance int
+}
+
+type SearchResult struct {
+	Word string
 	Distance int
 }
 
@@ -20,8 +24,18 @@ func (t BKTree) AddWord(input string) {
 	t.Children = append(t.Children, BKTree{Word: input, Distance: dist})
 }
 
-func (t BKTree) Search(word string) {
+func (t BKTree) Search(word string, maxDist int) (found []SearchResult) {
+	dist := Distance(t.Word, word)
 
+	if t.Distance >= dist - maxDist && t.Distance <= dist + maxDist {
+		found = append(found, SearchResult{Word: word, Distance: dist})
+	}
+
+	for i := range t.Children {
+		found = append(found, t.Children[i].Search(word, maxDist)...)
+	}
+
+	return found
 }
 
 func min(x, y int) int {
