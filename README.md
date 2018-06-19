@@ -1,4 +1,4 @@
-# BKSpellCheck
+# spellchebk
 Implementation of a spell checker (and corrector) using [BK-trees](https://en.wikipedia.org/wiki/BK-tree).
 
 ## Example

@@ -1,6 +1,6 @@
 // Package bkspellcheck allows for the creation and use of BK-trees
 // meant specifically for spell checking and correction.
-package bkspellcheck
+package spellchebk
 
 // BKTree is an n-ary BK-tree.
 type BKTree struct {

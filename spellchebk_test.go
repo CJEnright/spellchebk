@@ -1,4 +1,4 @@
-package bkspellcheck
+package spellchebk
 
 import "testing"
 
