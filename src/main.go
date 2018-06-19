@@ -1,5 +1,6 @@
 package bkspellcheck
 
+
 type BKTree struct {
 	Word string
 	Children []BKTree
@@ -11,12 +12,12 @@ type SearchResult struct {
 	Distance int
 }
 
-func (t BKTree) AddWord(input string) {
+func (t *BKTree) Add(input string) {
 	dist := Distance(t.Word, input)
 
 	for i := range t.Children {
 		if t.Children[i].Distance == dist {
-			t.Children[i].AddWord(input)
+			t.Children[i].Add(input)
 			return
 		}
 	}
@@ -24,15 +25,17 @@ func (t BKTree) AddWord(input string) {
 	t.Children = append(t.Children, BKTree{Word: input, Distance: dist})
 }
 
-func (t BKTree) Search(word string, maxDist int) (found []SearchResult) {
+func (t BKTree) Search(word string, tol int) (found []SearchResult) {
 	dist := Distance(t.Word, word)
 
-	if t.Distance >= dist - maxDist && t.Distance <= dist + maxDist {
-		found = append(found, SearchResult{Word: word, Distance: dist})
+	if dist <= tol {
+		found = append(found, SearchResult{Word: t.Word, Distance: dist})
 	}
 
 	for i := range t.Children {
-		found = append(found, t.Children[i].Search(word, maxDist)...)
+		if t.Children[i].Distance >= dist - tol && t.Children[i].Distance <= dist + tol {
+			found = append(found, t.Children[i].Search(word, tol)...)
+		}
 	}
 
 	return found
