@@ -27,7 +27,9 @@ func (t *BKTree) Add(input string) {
 		}
 	}
 
-	t.Children = append(t.Children, BKTree{Word: input, Distance: dist})
+	if dist != 0 {
+		t.Children = append(t.Children, BKTree{Word: input, Distance: dist})
+	}
 }
 
 // Search queries the tree and returns SearchResult structs of matching words.
