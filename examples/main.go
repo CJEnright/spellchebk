@@ -15,7 +15,7 @@ func main() {
 	}
 
 	fmt.Println(checker.Search("nmae", 1))
-	// Prints "[{name 1}]", the added word to the input
+	// Prints "[{name 1}]", the only input within 1 Damerau–Levenshtein of "nmae"
 
 	fmt.Println(checker.Search("bakc", 2))
 	// Prints "[{back 1} {make 2}]", so back is the most likely attempted spelling
