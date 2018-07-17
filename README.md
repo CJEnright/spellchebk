@@ -4,14 +4,14 @@ Implementation of a spell checker (and corrector) using [BK-trees](https://en.wi
 ## Example
 ```
 // Start the tree with an arbitrary word
-tree := BKTree{Word: "cat"}
+checher := NewSpellChecker{Word: "cat"}
 
 // And add words as needed
-tree.Add("rat")
-tree.Add("dog")
+checker.Add("rat")
+checker.Add("dog")
 
-// And query the tree by giving it a string and a tolerence
-res := tree.Search("eog", 1)
+// And query the checker by giving it a string and a tolerance
+res := checker.Search("eog", 1)
 
 // res = [{Word: "dog", Distance: 1}]
 ```

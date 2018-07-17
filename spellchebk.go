@@ -9,10 +9,15 @@ type BKTree struct {
 	Distance int
 }
 
-// SearchResult are returned by the search function.
+// SearchResult is returned by the search function.
 type SearchResult struct {
 	Word string
 	Distance int
+}
+
+// NewSpellChecker returns a new BKTree with the initial node root
+func NewSpellChecker(root string) BKTree {
+	return BKTree{Word: root}
 }
 
 // Add inserts a word into the BK-tree.
