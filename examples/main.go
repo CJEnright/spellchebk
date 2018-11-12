@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/CJEnright/spellchebk"
+	"github.com/cjenright/spellchebk"
 	"fmt"
 )
 

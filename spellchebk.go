@@ -4,15 +4,15 @@ package spellchebk
 
 // BKTree is an n-ary BK-tree.
 type BKTree struct {
-	Word string
-	Children []BKTree
-	Distance int
+	Word string `json:"word"`
+	Children []BKTree `json:"children"`
+	Distance int `json:"distance"`
 }
 
 // SearchResult is returned by the search function.
 type SearchResult struct {
-	Word string
-	Distance int
+	Word string `json:"word"`
+	Distance int `json:"distance"`
 }
 
 // NewSpellChecker returns a new BKTree with the initial node root
