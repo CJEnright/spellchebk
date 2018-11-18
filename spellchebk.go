@@ -1,4 +1,3 @@
-// Package spellchebk implements a spell checker using BK-trees.
 package spellchebk
 
 import (
@@ -6,7 +5,7 @@ import (
 	"sync"
 )
 
-// bktree is an n-ary BK-tree.
+// A bktree is an n-ary BK-tree.
 type bktree struct {
 	word     string    `json:"word"`
 	children []*bktree `json:"children"`
@@ -14,30 +13,39 @@ type bktree struct {
 	distance int `json:"distance"`
 }
 
-// SearchResult is returned by the search function.
+// A SearchResult is one of possibly many results found during a search.
 type SearchResult struct {
 	Word     string `json:"word"`
 	Distance int    `json:"distance"`
 }
 
-type distFunc func(word1, word2 string) (distance int)
+// A DistFunc returns an integer of how different two string are.
+type DistFunc func(first, second string) (distance int)
 
+// A SpellChecker builds and queries a spell checker to find similar words.
+//
+// It uses a string distance function to build an internal BK-tree.
+// The default distance function is the True Damerau–Levenshtein distance which
+// this package implements as TrueDLDistance.
+// SpellCheckers are safe to use across threads.
 type SpellChecker struct {
-	mu           sync.Mutex
-	tree         *bktree
-	DistanceFunc distFunc
+	mu   sync.Mutex
+	tree *bktree
+	// DistanceFunc will be used to find the distance between two words.
+	// For every word added or query, this will likely be run several times.
+	DistanceFunc DistFunc
 }
 
 // NewSpellChecker returns a new bktree with the initial node root.
 func NewSpellChecker() *SpellChecker {
 	return &SpellChecker{
-		DistanceFunc: TrueDamerauLevenshteinDistance,
+		DistanceFunc: TrueDLDistance,
 		tree:         &bktree{},
 	}
 }
 
 // Add inserts a word into the spell checker.
-// It is safe to be used across threads
+// It is safe to be used across threads.
 func (s *SpellChecker) Add(input string) (err error) {
 	if input == "" {
 		return fmt.Errorf("attempted to add empty string")
@@ -53,7 +61,7 @@ func (s *SpellChecker) Add(input string) (err error) {
 // add recursively traverses a bktree to find a suitable spot for the given input.
 // When it reaches across an empty string, the input will be placed there.
 // For that reason (and from a practicallity standpoint), an empty string cannot be added to the tree.
-func (b *bktree) add(input string, df distFunc) (err error) {
+func (b *bktree) add(input string, df DistFunc) (err error) {
 	if b.word == "" {
 		b.word = input
 		return err
@@ -85,7 +93,7 @@ func (s *SpellChecker) Search(query string, tolerance int) (found []SearchResult
 
 // search recursively traverses a bktree.
 // It returns a slice of SearchResults that fall within the given tolerance.
-func (b *bktree) search(query string, tolerance int, df distFunc) (found []SearchResult) {
+func (b *bktree) search(query string, tolerance int, df DistFunc) (found []SearchResult) {
 	dist := df(b.word, query)
 
 	if dist <= tolerance {
@@ -109,38 +117,38 @@ func min(x, y int) int {
 	return y
 }
 
-// TrueDamerauLevenshtein finds the True Damerau–Levenshtein distance between two words.
-// It's similar to DamerauLevenshteinDistance but it also accounts for adjacent transpositions.
+// TrueDLDistance finds the True Damerau–Levenshtein distance between two words.
+// It's similar to the Damerau-Levenshtein distance but it also accounts for adjacent transpositions.
 // Importantly, it also needs to know the size of the input alphabet.
-func TrueDamerauLevenshteinDistance(word1 string, word2 string) int {
+func TrueDLDistance(first string, second string) int {
 	// Size of our alphabet
 	var da [255]int
 
-	d := make([][]int, len(word1)+2)
+	d := make([][]int, len(first)+2)
 	for i := range d {
-		d[i] = make([]int, len(word2)+2)
+		d[i] = make([]int, len(second)+2)
 	}
 
-	max := len(word1) + len(word2)
+	max := len(first) + len(second)
 
 	d[0][0] = max
-	for i := 0; i <= len(word1); i++ {
+	for i := 0; i <= len(first); i++ {
 		d[i+1][0] = max
 		d[i+1][1] = i
 	}
-	for i := 0; i <= len(word2); i++ {
+	for i := 0; i <= len(second); i++ {
 		d[0][i+1] = max
 		d[1][i+1] = i
 	}
 
-	for i := 1; i <= len(word1); i++ {
+	for i := 1; i <= len(first); i++ {
 		db := 0
-		for j := 1; j <= len(word2); j++ {
-			k := da[word2[j-1]]
+		for j := 1; j <= len(second); j++ {
+			k := da[second[j-1]]
 			l := db
 			cost := 0
 
-			if word1[i-1] == word2[j-1] {
+			if first[i-1] == second[j-1] {
 				db = j
 			} else {
 				cost = 1
@@ -154,8 +162,8 @@ func TrueDamerauLevenshteinDistance(word1 string, word2 string) int {
 			d[i+1][j+1] = min(sub, min(ins, min(del, trans)))
 		}
 
-		da[word1[i-1]] = i
+		da[first[i-1]] = i
 	}
 
-	return d[len(word1)+1][len(word2)+1]
+	return d[len(first)+1][len(second)+1]
 }

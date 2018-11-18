@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestTrueDamerauLevenshteinDistance(t *testing.T) {
+func TestTrueDLDistance(t *testing.T) {
 	tt := []struct {
 		name     string
 		word1    string
@@ -40,7 +40,7 @@ func TestTrueDamerauLevenshteinDistance(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			result := TrueDamerauLevenshteinDistance(tc.word1, tc.word2)
+			result := TrueDLDistance(tc.word1, tc.word2)
 			if result != tc.expected {
 				t.Errorf("expected %d but got %d for distance between %s and %s", tc.expected, result, tc.word1, tc.word2)
 			}
@@ -50,10 +50,10 @@ func TestTrueDamerauLevenshteinDistance(t *testing.T) {
 
 func TestAdd(t *testing.T) {
 	tree := bktree{}
-	tree.add("sail", TrueDamerauLevenshteinDistance)
-	tree.add("mail", TrueDamerauLevenshteinDistance)
-	tree.add("rail", TrueDamerauLevenshteinDistance)
-	tree.add("snape", TrueDamerauLevenshteinDistance)
+	tree.add("sail", TrueDLDistance)
+	tree.add("mail", TrueDLDistance)
+	tree.add("rail", TrueDLDistance)
+	tree.add("snape", TrueDLDistance)
 
 	// tree should look like this now
 	//							sail
@@ -79,7 +79,7 @@ func TestAdd(t *testing.T) {
 		t.Error("expected \"snape\" to be the 1st child of the root")
 	}
 
-	err := tree.add("snape", TrueDamerauLevenshteinDistance)
+	err := tree.add("snape", TrueDLDistance)
 	if err != nil {
 		t.Error("expected adding \"snape\", which is already in the tree, to throw an error")
 	}
