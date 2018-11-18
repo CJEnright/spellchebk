@@ -1,7 +1,10 @@
 // Package spellchebk implements a spell checker using BK-trees.
 package spellchebk
 
-import "fmt"
+import (
+	"fmt"
+	"sync"
+)
 
 // bktree is an n-ary BK-tree.
 type bktree struct {
@@ -20,6 +23,7 @@ type SearchResult struct {
 type distFunc func(word1, word2 string) (distance int)
 
 type SpellChecker struct {
+	mu           sync.Mutex
 	tree         *bktree
 	DistanceFunc distFunc
 }
@@ -33,10 +37,16 @@ func NewSpellChecker() *SpellChecker {
 }
 
 // Add inserts a word into the spell checker.
+// It is safe to be used across threads
 func (s *SpellChecker) Add(input string) (err error) {
 	if input == "" {
 		return fmt.Errorf("attempted to add empty string")
 	}
+
+	// Go sure makes it easy to be thread safe
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	return s.tree.add(input, s.DistanceFunc)
 }
 
