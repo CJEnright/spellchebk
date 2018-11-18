@@ -1,58 +1,144 @@
 package spellchebk
 
-import "testing"
+import (
+	"reflect"
+	"testing"
+)
 
-func TestDistance(t *testing.T) {
-	if dist := Distance("CA", "ABC"); dist != 2 {
-		t.Error("Distance between \"CA\" and \"ABC\" expected", 2, "but was", dist)
+func TestTrueDamerauLevenshteinDistance(t *testing.T) {
+	tt := []struct {
+		name     string
+		word1    string
+		word2    string
+		expected int
+	}{
+		{
+			name:     "letters",
+			word1:    "CA",
+			word2:    "ABC",
+			expected: 2,
+		},
+		{
+			name:     "neat",
+			word1:    "testing",
+			word2:    "isneat",
+			expected: 6,
+		},
+		{
+			name:     "sports",
+			word1:    "touchdown",
+			word2:    "downtouch",
+			expected: 8,
+		},
+		{
+			name:     "number words",
+			word1:    "seven",
+			word2:    "eight",
+			expected: 5,
+		},
 	}
-	if dist := Distance("testing", "isneat"); dist != 6 {
-		t.Error("Distance between \"testing\" and \"isneat\" expected", 6, "but was", dist)
-	}
-	if dist := Distance("touchdown", "downtouch"); dist != 8 {
-		t.Error("Distance between \"touchdown\" and \"downtouch\" expected", 8, "but was", dist)
-	}
-	if dist := Distance("seven", "eight"); dist != 5 {
-		t.Error("Distance between \"seven\" and \"eight\" expected", 5, "but was", dist)
+
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			result := TrueDamerauLevenshteinDistance(tc.word1, tc.word2)
+			if result != tc.expected {
+				t.Errorf("expected %d but got %d for distance between %s and %s", tc.expected, result, tc.word1, tc.word2)
+			}
+		})
 	}
 }
 
 func TestAdd(t *testing.T) {
-	checker := NewSpellChecker("snail")
-	checker.Add("sail")
-	checker.Add("mail")
-	checker.Add("snape")
+	tree := bktree{}
+	tree.add("sail", TrueDamerauLevenshteinDistance)
+	tree.add("mail", TrueDamerauLevenshteinDistance)
+	tree.add("rail", TrueDamerauLevenshteinDistance)
+	tree.add("snape", TrueDamerauLevenshteinDistance)
 
-	if checker.Children[0].Word != "sail" {
-		t.Error("\"sail\" should be the 0th child of the root, but wasn't found")
+	if tree.word != "sail" {
+		t.Error("expected \"sail\" to be the root")
 	}
-	if checker.Children[1].Word != "mail" {
-		t.Error("\"mail\" should be the 1st child of the root, but wasn't found")
+	if tree.children[0].word != "mail" {
+		t.Error("expected \"mail\" to be the 0th child of the root")
 	}
-	if checker.Children[1].Children[0].Word != "snape" {
-		t.Error("\"snape\" should be the 0th child of the 1st child of the root, but wasn't found")
+	if tree.children[0].children[0].word != "rail" {
+		t.Error("expected \"rail\" to be the 0th child of the 0th child of the root")
+	}
+	if tree.children[1].word != "snape" {
+		t.Error("expected \"snape\" to be the 1st child of the root")
+	}
+
+	err := tree.add("snape", TrueDamerauLevenshteinDistance)
+	if err != nil {
+		t.Error("expected adding \"snape\", which is already in the tree, to throw an error")
 	}
 }
 
 func TestSearch(t *testing.T) {
-	checker := NewSpellChecker("snail")
-	checker.Add("sail")
-	checker.Add("mail")
-	checker.Add("snape")
-	checker.Add("far off")
+	c := NewSpellChecker()
+	c.Add("sail")    // sail is the root
+	c.Add("mail")    // mail has a dist of 1 (depending on distfunc)
+	c.Add("rail")    // rail has a dist of 1 (depending on distfunc)
+	c.Add("snape")   // snape has a dist of 3 (depending on distfunc)
+	c.Add("far off") // far off has a dist of 6 (depending on distfunc)
 
-	res := checker.Search("nail", 1)
-	if res[0].Word != "snail" && res[1].Word != "mail" {
-		t.Error("Searching for \"nail\" did not return \"snail\" and \"mail\"")
+	tt := []struct {
+		query     string
+		tolerance int
+		expected  []SearchResult
+	}{
+		{
+			query:     "nail",
+			tolerance: 1,
+			expected: []SearchResult{
+				{
+					Word:     "sail",
+					Distance: 1,
+				},
+				{
+					Word:     "mail",
+					Distance: 1,
+				},
+				{
+					Word:     "rail",
+					Distance: 1,
+				},
+			},
+		},
+		{
+			query:     "snape",
+			tolerance: 0,
+			expected: []SearchResult{
+				{
+					Word:     "snape",
+					Distance: 0,
+				},
+			},
+		},
+		{
+			query:     "rail",
+			tolerance: 0,
+			expected: []SearchResult{
+				{
+					Word:     "rail",
+					Distance: 0,
+				},
+			},
+		},
+		{
+			query:     "not here",
+			tolerance: 0,
+			expected:  nil,
+		},
 	}
 
-	res = checker.Search("snape", 0)
-	if res[0].Word != "snape" {
-		t.Error("Exact search for \"snape\" did not find \"snape\"")
-	}
+	for _, tc := range tt {
+		t.Run(tc.query, func(t *testing.T) {
+			result := c.Search(tc.query, tc.tolerance)
 
-	res = checker.Search("not here", 0)
-	if len(res) != 0 {
-		t.Error("Search for non existant string yeilded a result")
+			if !reflect.DeepEqual(result, tc.expected) {
+				t.Errorf("search for \"%s\" expected: %v got: %v", tc.query, tc.expected, result)
+			}
+		})
 	}
 }

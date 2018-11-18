@@ -3,8 +3,7 @@ Implementation of a spell checker (and corrector) using [BK-trees](https://en.wi
 
 ## Example
 ```
-// Start the tree with an arbitrary word
-checker := NewSpellChecker("cat")
+checker := NewSpellChecker()
 
 // And add words as needed
 checker.Add("rat")
