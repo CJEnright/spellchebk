@@ -1,18 +1,14 @@
 # spellchebk
 Implementation of a spell checker (and corrector) using [BK-trees](https://en.wikipedia.org/wiki/BK-tree).
 
-## Example
-```
-checker := NewSpellChecker()
+* Thread safe
+* Definable distance functions
+* No dependencies (outside of Go stdlib)
 
-// And add words as needed
-checker.Add("rat")
-checker.Add("dog")
+## Documentation
+[https://godoc.org/github.com/CJEnright/spellchebk](https://godoc.org/github.com/CJEnright/spellchebk)
 
-// And query the checker by giving it a string and a tolerance
-res := checker.Search("eog", 1)
-
-// res = [{Word: "dog", Distance: 1}]
-```
+## Examples
+See [the examples directory](https://github.com/CJEnright/spellchebk/tree/master/_examples) for some full examples.
 
 lmao, hope I spelled everything here correctly.
