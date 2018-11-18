@@ -55,6 +55,17 @@ func TestAdd(t *testing.T) {
 	tree.add("rail", TrueDamerauLevenshteinDistance)
 	tree.add("snape", TrueDamerauLevenshteinDistance)
 
+	// tree should look like this now
+	//							sail
+	//							/ \
+	//						 1   3
+	//						/			\
+	//					mail 	 snape
+	//					/
+	//				 1
+	//				/
+	//			rail
+
 	if tree.word != "sail" {
 		t.Error("expected \"sail\" to be the root")
 	}
