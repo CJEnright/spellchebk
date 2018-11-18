@@ -1,12 +1,13 @@
 package main
 
 import (
-	"github.com/cjenright/spellchebk"
 	"fmt"
+
+	"github.com/cjenright/spellchebk"
 )
 
 func main() {
-	checker := spellchebk.NewSpellChecker("cat")
+	checker := spellchebk.NewSpellChecker()
 	// Just a bunch of random but common words
 	words := [...]string{"back", "top", "people", "had", "list", "name", "just", "over", "state", "year", "day", "into", "email", "health", "world", "next", "used", "work", "last", "most", "products", "music", "buy", "data", "make", "them", "should", "product", "system", "post", "city", "policy", "number", "such", "please", "available", "copyright", "support", "message", "after", "best", "software", "then", "good", "video", "well", "where", "info", "rights", "public", "books", "high", "school", "through", "each", "links", "review", "years", "order", "very", "privacy", "book", "items"}
 
