@@ -5,12 +5,13 @@ import (
 	"sync"
 )
 
-// A bktree is an n-ary BK-tree.
-type bktree struct {
-	word     string    `json:"word"`
-	children []*bktree `json:"children"`
+// A BKtree is an n-ary BK-tree.
+type BKtree struct {
+	Word     string    `json:"word"`
+	Children []*BKtree `json:"children"`
+
 	// Distance from parent to this node
-	distance int `json:"distance"`
+	Distance int `json:"distance"`
 }
 
 // A SearchResult is one of possibly many results found during a search.
@@ -30,17 +31,17 @@ type DistFunc func(first, second string) (distance int)
 // SpellCheckers are safe to use across threads.
 type SpellChecker struct {
 	mu   sync.Mutex
-	tree *bktree
+	Tree *BKtree
 	// DistanceFunc will be used to find the distance between two words.
 	// For every word added or query, this will likely be run several times.
 	DistanceFunc DistFunc
 }
 
-// NewSpellChecker returns a new bktree with the initial node root.
+// NewSpellChecker returns a new BKtree with the initial node root.
 func NewSpellChecker() *SpellChecker {
 	return &SpellChecker{
 		DistanceFunc: TrueDLDistance,
-		tree:         &bktree{},
+		Tree:         &BKtree{},
 	}
 }
 
@@ -55,23 +56,23 @@ func (s *SpellChecker) Add(input string) (err error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	return s.tree.add(input, s.DistanceFunc)
+	return s.Tree.add(input, s.DistanceFunc)
 }
 
-// add recursively traverses a bktree to find a suitable spot for the given input.
+// add recursively traverses a BKtree to find a suitable spot for the given input.
 // When it reaches across an empty string, the input will be placed there.
 // For that reason (and from a practicallity standpoint), an empty string cannot be added to the tree.
-func (b *bktree) add(input string, df DistFunc) (err error) {
-	if b.word == "" {
-		b.word = input
+func (b *BKtree) add(input string, df DistFunc) (err error) {
+	if b.Word == "" {
+		b.Word = input
 		return err
 	}
 
-	dist := df(b.word, input)
+	dist := df(b.Word, input)
 
-	for i := range b.children {
-		if b.children[i].distance == dist {
-			b.children[i].add(input, df)
+	for i := range b.Children {
+		if b.Children[i].Distance == dist {
+			b.Children[i].add(input, df)
 			return err
 		}
 	}
@@ -80,7 +81,7 @@ func (b *bktree) add(input string, df DistFunc) (err error) {
 	if dist == 0 {
 		return fmt.Errorf("word %s already exists in spell checker", input)
 	} else {
-		b.children = append(b.children, &bktree{word: input, distance: dist})
+		b.Children = append(b.Children, &BKtree{Word: input, Distance: dist})
 	}
 
 	return err
@@ -88,21 +89,21 @@ func (b *bktree) add(input string, df DistFunc) (err error) {
 
 // Search queries the tree and returns SearchResult structs of matching words.
 func (s *SpellChecker) Search(query string, tolerance int) (found []SearchResult) {
-	return s.tree.search(query, tolerance, s.DistanceFunc)
+	return s.Tree.search(query, tolerance, s.DistanceFunc)
 }
 
-// search recursively traverses a bktree.
+// search recursively traverses a BKtree.
 // It returns a slice of SearchResults that fall within the given tolerance.
-func (b *bktree) search(query string, tolerance int, df DistFunc) (found []SearchResult) {
-	dist := df(b.word, query)
+func (b *BKtree) search(query string, tolerance int, df DistFunc) (found []SearchResult) {
+	dist := df(b.Word, query)
 
 	if dist <= tolerance {
-		found = append(found, SearchResult{Word: b.word, Distance: dist})
+		found = append(found, SearchResult{Word: b.Word, Distance: dist})
 	}
 
-	for i := range b.children {
-		if b.children[i].distance >= dist-tolerance && b.children[i].distance <= dist+tolerance {
-			found = append(found, b.children[i].search(query, tolerance, df)...)
+	for i := range b.Children {
+		if b.Children[i].Distance >= dist-tolerance && b.Children[i].Distance <= dist+tolerance {
+			found = append(found, b.Children[i].search(query, tolerance, df)...)
 		}
 	}
 

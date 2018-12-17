@@ -1,6 +1,8 @@
 package spellchebk
 
 import (
+	"bytes"
+	"encoding/gob"
 	"reflect"
 	"testing"
 )
@@ -49,7 +51,7 @@ func TestTrueDLDistance(t *testing.T) {
 }
 
 func TestAdd(t *testing.T) {
-	tree := bktree{}
+	tree := BKtree{}
 	tree.add("sail", TrueDLDistance)
 	tree.add("mail", TrueDLDistance)
 	tree.add("rail", TrueDLDistance)
@@ -66,16 +68,16 @@ func TestAdd(t *testing.T) {
 	//				/
 	//			rail
 
-	if tree.word != "sail" {
+	if tree.Word != "sail" {
 		t.Error("expected \"sail\" to be the root")
 	}
-	if tree.children[0].word != "mail" {
+	if tree.Children[0].Word != "mail" {
 		t.Error("expected \"mail\" to be the 0th child of the root")
 	}
-	if tree.children[0].children[0].word != "rail" {
+	if tree.Children[0].Children[0].Word != "rail" {
 		t.Error("expected \"rail\" to be the 0th child of the 0th child of the root")
 	}
-	if tree.children[1].word != "snape" {
+	if tree.Children[1].Word != "snape" {
 		t.Error("expected \"snape\" to be the 1st child of the root")
 	}
 
@@ -151,5 +153,29 @@ func TestSearch(t *testing.T) {
 				t.Errorf("search for \"%s\" expected: %v got: %v", tc.query, tc.expected, result)
 			}
 		})
+	}
+}
+
+func TestGob(t *testing.T) {
+	encode := NewSpellChecker()
+	encode.Add("test123")
+
+	var b bytes.Buffer
+	e := gob.NewEncoder(&b)
+	d := gob.NewDecoder(&b)
+
+	err := e.Encode(encode)
+	if err != nil {
+		t.Errorf("failed to encode to gob: %s", err)
+	}
+
+	var decode *SpellChecker
+	err = d.Decode(&decode)
+	if err != nil {
+		t.Errorf("failed to decode to gob: %s", err)
+	}
+
+	if !reflect.DeepEqual(encode.Tree, decode.Tree) {
+		t.Errorf("decoded gob does not match original, expected: %v got: %v", encode, decode)
 	}
 }
