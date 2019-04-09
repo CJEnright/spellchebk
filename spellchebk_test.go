@@ -82,7 +82,7 @@ func TestAdd(t *testing.T) {
 	}
 
 	err := tree.add("snape", TrueDLDistance)
-	if err != nil {
+	if err == nil {
 		t.Error("expected adding \"snape\", which is already in the tree, to throw an error")
 	}
 }
@@ -169,10 +169,22 @@ func TestGob(t *testing.T) {
 		t.Errorf("failed to encode to gob: %s", err)
 	}
 
+	encode.Search("thing", 1)
+	if err != nil {
+		t.Errorf("failed search encoded: %s", err)
+	}
+
 	var decode *SpellChecker
 	err = d.Decode(&decode)
 	if err != nil {
 		t.Errorf("failed to decode to gob: %s", err)
+	}
+	// Because gob can't encode functions you must set the distance func again
+	decode.DistanceFunc = TrueDLDistance
+
+	decode.Search("thing", 1)
+	if err != nil {
+		t.Errorf("failed search decode: %s", err)
 	}
 
 	if !reflect.DeepEqual(encode.Tree, decode.Tree) {

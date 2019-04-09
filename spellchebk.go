@@ -52,7 +52,6 @@ func (s *SpellChecker) Add(input string) (err error) {
 		return fmt.Errorf("attempted to add empty string")
 	}
 
-	// Go sure makes it easy to be thread safe
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -69,21 +68,18 @@ func (b *BKtree) add(input string, df DistFunc) (err error) {
 	}
 
 	dist := df(b.Word, input)
+	if dist == 0 {
+		// Distance == 0 implies that the word is already in the tree
+		return fmt.Errorf("word %s already exists in spell checker", input)
+	}
 
 	for i := range b.Children {
 		if b.Children[i].Distance == dist {
-			b.Children[i].add(input, df)
-			return err
+			return b.Children[i].add(input, df)
 		}
 	}
 
-	// Distance == 0 implies that the word is already in the tree
-	if dist == 0 {
-		return fmt.Errorf("word %s already exists in spell checker", input)
-	} else {
-		b.Children = append(b.Children, &BKtree{Word: input, Distance: dist})
-	}
-
+	b.Children = append(b.Children, &BKtree{Word: input, Distance: dist})
 	return err
 }
 
